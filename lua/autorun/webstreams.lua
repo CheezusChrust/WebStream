@@ -8,11 +8,10 @@ CreateConVar("webstream_enabled", "1", FCVAR_REPLICATED, "If enabled, dupes and 
 CreateConVar("webstream_chunksize", "500000", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Data sent through webstreams will be split into chunks of this size, in bytes", 100000, 1000000)
 CreateConVar("webstream_maxretries", "6", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "If a request fails, retry up to this many times", 0, 10)
 
-local function debugPrint(dbg, ...)
-    --This helps if you're using EPOE
-    local realm = SERVER and "[SERVER]" or "[CLIENT]"
-    local realmColor = SERVER and Color(3, 169, 244) or Color(222, 169, 9)
+local realm = SERVER and "[SERVER]" or "[CLIENT]"
+local realmColor = SERVER and Color(3, 169, 244) or Color(222, 169, 9)
 
+local function debugPrint(dbg, ...)
     if (dbg and GetConVar("webstream_debug"):GetBool()) or not dbg then
         MsgC(realmColor, realm, Color(0, 200, 50), " [WebStream] ", Color(255, 255, 255), ..., "\n")
     end
