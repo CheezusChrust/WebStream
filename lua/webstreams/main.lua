@@ -84,6 +84,12 @@ local function TransmitData(Stream)
     end)
 end
 
+--- Creates and starts a new WebStream
+-- @param id A unique identifier for this stream
+-- @param data The data to be sent
+-- @param destination The player to send the data to, or nil to send to all players
+-- @param onFailure A function to be called if the stream fails
+-- @param onSuccess A function to be called if the stream succeeds
 function WebStream.WriteStream(id, data, destination, onFailure, onSuccess)
     debugPrint(true, "[" .. id .. "] WriteStream started (" .. (#data / 1000) .. " kB)")
 
@@ -158,6 +164,10 @@ local function ReceiveData(Stream)
     end)
 end
 
+--- Reads a WebStream if one with the given ID is ready
+-- @param id The ID of the stream to read
+-- @param callback A function to be called when the stream is ready, with the data as the first argument
+-- @param onFailure A function to be called if the stream fails
 function WebStream.ReadStream(id, callback, onFailure)
     debugPrint(true, "[" .. id .. "] ReadStream started")
     local Stream = {}
