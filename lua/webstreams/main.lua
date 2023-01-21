@@ -5,7 +5,7 @@ WebStream.Server = ""
 
 CreateConVar("webstream_debug", "0", {FCVAR_ARCHIVE}, "Enable to see debug information printed to console", 0, 1)
 CreateConVar("webstream_enabled", "1", FCVAR_REPLICATED, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
-CreateConVar("webstream_chunksize", "500000", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Data sent through webstreams will be split into chunks of this size, in bytes", 100000, 1000000)
+CreateConVar("webstream_chunksize", "500", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Data sent through webstreams will be split into chunks of this size, in kilobytes", 100, 10000)
 CreateConVar("webstream_maxretries", "6", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "If a request fails, retry up to this many times", 0, 10)
 
 local realm = SERVER and "[SERVER]" or "[CLIENT]"
@@ -84,12 +84,13 @@ local function TransmitData(Stream)
     end)
 end
 
---- Creates and starts a new WebStream
+--- Creates and starts a new WebStream.
 -- @param id A unique identifier for this stream
 -- @param data The data to be sent
 -- @param destination The player to send the data to, or nil to send to all players
 -- @param onFailure A function to be called if the stream fails
 -- @param onSuccess A function to be called if the stream succeeds
+-- @return The stream object
 function WebStream.WriteStream(id, data, destination, onFailure, onSuccess)
     debugPrint(true, "[" .. id .. "] WriteStream started (" .. (#data / 1000) .. " kB)")
 
@@ -104,7 +105,7 @@ function WebStream.WriteStream(id, data, destination, onFailure, onSuccess)
     local Stream = {}
     Stream.id = id
     Stream.destination = destination
-    Stream.chunks = SplitByChunk(util.Base64Encode(data, true), GetConVar("webstream_chunksize"):GetInt())
+    Stream.chunks = SplitByChunk(util.Base64Encode(data, true), GetConVar("webstream_chunksize"):GetInt() * 1000)
     Stream.progress = 0 --Chunk we're currently uploading
     Stream.chunkNames = {} --Ordered table of chunk names that have been uploaded
     Stream.onFailure = onFailure
@@ -164,10 +165,11 @@ local function ReceiveData(Stream)
     end)
 end
 
---- Reads a WebStream if one with the given ID is ready
+--- Reads a WebStream if one with the given ID is ready.
 -- @param id The ID of the stream to read
 -- @param callback A function to be called when the stream is ready, with the data as the first argument
 -- @param onFailure A function to be called if the stream fails
+-- @return The stream object
 function WebStream.ReadStream(id, callback, onFailure)
     debugPrint(true, "[" .. id .. "] ReadStream started")
     local Stream = {}
