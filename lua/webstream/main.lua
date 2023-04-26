@@ -4,7 +4,7 @@ WebStream.DownloadsReady = WebStream.DownloadsReady or {}
 WebStream.Server = ""
 
 CreateConVar("webstream_debug", "0", {FCVAR_ARCHIVE}, "Enable to see debug information printed to console", 0, 1)
-CreateConVar("webstream_enabled", "1", FCVAR_REPLICATED, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
+CreateConVar("webstream_active", "1", FCVAR_REPLICATED, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
 CreateConVar("webstream_chunksize", "500", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Data sent through webstreams will be split into chunks of this size, in kilobytes", 100, 10000)
 CreateConVar("webstream_maxretries", "6", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "If a request fails, retry up to this many times", 0, 10)
 
@@ -106,8 +106,8 @@ function WebStream.WriteStream(id, data, destination, onFailure, onSuccess)
     Stream.id = id
     Stream.destination = destination
     Stream.chunks = SplitByChunk(util.Base64Encode(data, true), GetConVar("webstream_chunksize"):GetInt() * 1000)
-    Stream.progress = 0 --Chunk we're currently uploading
-    Stream.chunkNames = {} --Ordered table of chunk names that have been uploaded
+    Stream.progress = 0 -- Chunk we're currently uploading
+    Stream.chunkNames = {} -- Ordered table of chunk names that have been uploaded
     Stream.onFailure = onFailure
     Stream.onSuccess = onSuccess
     Stream.retries = 0
