@@ -1,8 +1,8 @@
-include("webstreams/main.lua")
-AddCSLuaFile("webstreams/main.lua")
+include("webstream/main.lua")
+AddCSLuaFile("webstream/main.lua")
 
-include("webstreams/overrides/p2m.lua")
-AddCSLuaFile("webstreams/overrides/p2m.lua")
-
-include("webstreams/overrides/ad2.lua")
-AddCSLuaFile("webstreams/overrides/ad2.lua")
+local files = file.Find("webstream/overrides/*", "LUA")
+for _, f in pairs(files) do
+    include("webstream/overrides/" .. f)
+    AddCSLuaFile("webstream/overrides/" .. f)
+end
