@@ -1,7 +1,7 @@
 WebStream = WebStream or {}
 WebStream.StreamsWaitingForDownload = {}
 WebStream.DownloadsReady = {}
-WebStream.Active = CreateConVar("webstream_active", "0", FCVAR_REPLICATED, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
+WebStream.Active = CreateConVar("webstream_active", "0", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
 
 local cvDebug = CreateConVar("webstream_debug", "0", {FCVAR_ARCHIVE}, "Enable to see debug information printed to console", 0, 1)
 local cvChunkSize = CreateConVar("webstream_chunksize", "1000", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Data sent through webstreams will be split into chunks of this size, in kilobytes", 100, 10000)
