@@ -24,7 +24,7 @@ Thread(target=clearOldData, daemon=True).start()
 @app.route("/", methods=["GET", "POST"])
 def webstream():
     if request.method != "POST":
-        return "Method not allowed", 405
+        return "OK", 200
 
     headers = request.headers
 

@@ -1,9 +1,9 @@
 WebStream = WebStream or {}
 WebStream.StreamsWaitingForDownload = {}
 WebStream.DownloadsReady = {}
+WebStream.Active = CreateConVar("webstream_active", "0", FCVAR_REPLICATED, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
 
 local cvDebug = CreateConVar("webstream_debug", "0", {FCVAR_ARCHIVE}, "Enable to see debug information printed to console", 0, 1)
-WebStream.Active = CreateConVar("webstream_active", "1", FCVAR_REPLICATED, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
 local cvChunkSize = CreateConVar("webstream_chunksize", "1000", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "Data sent through webstreams will be split into chunks of this size, in kilobytes", 100, 10000)
 local cvMaxRetries = CreateConVar("webstream_maxretries", "6", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "If a request fails, retry up to this many times", 0, 10)
 local cvServer = CreateConVar("webstream_server", "", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "The webstream server address")
@@ -19,6 +19,26 @@ end
 
 if SERVER then
     util.AddNetworkString("WebStream::DownloadReady")
+
+    local function disable(reason)
+        debugPrint(false, "WebStream disabled - " .. reason)
+
+        WebStream.Active:SetBool(false)
+    end
+
+    hook.Add("InitPostEntity", "WebStream::BeginStatusUpdates", function()
+        timer.Create("WebStream::CheckStatus", 30, 0, function()
+            if not WebStream.Active:GetBool() then return end
+
+            http.Fetch(cvServer:GetString(), function(body)
+                if body ~= "OK" then
+                    disable("Server returned non-OK value")
+                end
+            end, function(err)
+                disable("Server returned error: " .. err)
+            end)
+        end)
+    end)
 end
 
 local function SplitByChunk(text, chunkSize)

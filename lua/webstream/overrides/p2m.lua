@@ -5,7 +5,7 @@ hook.Add("InitPostEntity", "WebStream::InitP2M", function()
 
             net.Start("prop2mesh_download")
 
-            if WebStream and #data > 100000 and WebStream.Active:GetBool() then
+            if WebStream and #data > 25000 and WebStream.Active:GetBool() then
                 local id = "WS::" .. crc .. "." .. SysTime()
                 net.WriteString(id)
                 net.WriteString(crc)
