@@ -23,11 +23,16 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 AdvDupe2.File = nil
                 AdvDupe2.RemoveProgressBar()
             end, function()
-                uploading = nil
-                AdvDupe2.File = nil
-                AdvDupe2.RemoveProgressBar()
+                AdvDupe2.InitProgressBar("Receiving...")
+                AdvDupe2.ProgressBar.Percent = 50
             end)
         end
+
+        net.Receive("WebStream::AD2::FileReceived", function()
+            uploading = nil
+            AdvDupe2.File = nil
+            AdvDupe2.RemoveProgressBar()
+        end)
 
         function AdvDupe2.UploadFile(ReadPath, ReadArea)
             if uploading then
@@ -81,6 +86,8 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
             end
         end
     else
+        util.AddNetworkString("WebStream::AD2::FileReceived")
+
         local function parseUpload(ply, data)
             if data then
                 AdvDupe2.LoadDupe(ply, AdvDupe2.Decode(data))
@@ -106,6 +113,9 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
 
                 stream = WebStream.ReadStream(data1, function(data)
                     parseUpload(ply, data)
+
+                    net.Start("WebStream::AD2::FileReceived")
+                    net.Send(ply)
                 end, function()
                     AdvDupe2.Notify(ply, "Duplicator Upload Failed!", NOTIFY_ERROR, 5)
 
@@ -127,7 +137,7 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 AdvDupe2.Notify(ply, "Duplicator is Busy!", NOTIFY_ERROR, 5)
             elseif stream then
                 ply.AdvDupe2.Uploading = true
-                AdvDupe2.InitProgressBar(ply, "Opening: ")
+                AdvDupe2.InitProgressBar(ply, "Uploading...")
             end
         end
 
