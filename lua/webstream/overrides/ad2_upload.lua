@@ -10,6 +10,26 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 AdvDupe2.File = nil
                 AdvDupe2.RemoveProgressBar()
             end)
+
+            timer.Create("AdvDupe2::UploadProgress", 0.25, 0, function()
+                if not uploading then
+                    timer.Remove("AdvDupe2::UploadProgress")
+
+                    return
+                end
+
+                local progress = 0
+                local client = next(uploading.clients)
+                if client then
+                    client = uploading.clients[client]
+
+                    if client.progress then
+                        progress = client.progress / uploading.numchunks
+                    end
+                end
+
+                AdvDupe2.ProgressBar.Percent = progress * 100
+            end)
         end
 
         local function sendWebstream(name, read)
@@ -24,7 +44,16 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 AdvDupe2.RemoveProgressBar()
             end, function()
                 AdvDupe2.InitProgressBar("Receiving...")
-                AdvDupe2.ProgressBar.Percent = 50
+            end)
+
+            timer.Create("AdvDupe2::UploadProgress", 0.25, 0, function()
+                if not uploading then
+                    timer.Remove("AdvDupe2::UploadProgress")
+
+                    return
+                end
+
+                AdvDupe2.ProgressBar.Percent = uploading:GetProgress() * 100
             end)
         end
 

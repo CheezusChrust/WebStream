@@ -1,9 +1,28 @@
 hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
     if SERVER then
+        local download
+
         local function sendNormal(data, ply)
             net.WriteString("")
-            net.WriteStream(data, function()
+            download = net.WriteStream(data, function()
                 ply.AdvDupe2.Downloading = false
+                download = nil
+            end)
+
+            timer.Create("AdvDupe2::DownloadProgress", 0.25, 0, function()
+                if not download then
+                    timer.Remove("AdvDupe2::DownloadProgress")
+
+                    return
+                end
+
+                local progress = 0
+                local client = download.clients[next(download.clients)]
+                if client and client.progress then
+                    progress = client.progress / download.numchunks
+                end
+
+                AdvDupe2.UpdateProgressBar(ply, progress * 100)
             end)
         end
 
@@ -11,10 +30,22 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
             local randID = "WS::" .. math.random() .. "." .. SysTime()
 
             net.WriteString(randID)
-            WebStream.WriteStream(randID, data, ply, function()
+            download = WebStream.WriteStream(randID, data, ply, function()
                 ply.AdvDupe2.Downloading = false
+                download = nil
             end, function()
                 ply.AdvDupe2.Downloading = false
+                download = nil
+            end)
+
+            timer.Create("AdvDupe2::DownloadProgress", 0.25, 0, function()
+                if not download then
+                    timer.Remove("AdvDupe2::DownloadProgress")
+
+                    return
+                end
+
+                AdvDupe2.UpdateProgressBar(ply, download:GetProgress() * 100)
             end)
         end
 
