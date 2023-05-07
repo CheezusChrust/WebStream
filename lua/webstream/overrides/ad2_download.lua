@@ -1,5 +1,7 @@
 hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
     if SERVER then
+        util.AddNetworkString("WebStream::AdvDupe2::FileReadyDownload")
+
         local download
 
         local function sendNormal(data, ply)
@@ -36,6 +38,8 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
             end, function()
                 ply.AdvDupe2.Downloading = false
                 download = nil
+                net.Start("WebStream::AdvDupe2::FileReadyDownload")
+                net.Send(ply)
             end)
 
             timer.Create("AdvDupe2::DownloadProgress", 0.25, 0, function()
@@ -45,7 +49,7 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
                     return
                 end
 
-                AdvDupe2.UpdateProgressBar(ply, download:GetProgress() * 100)
+                AdvDupe2.UpdateProgressBar(ply, download:GetProgress() * 50)
             end)
         end
 
@@ -155,13 +159,35 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
             end
         end
 
+        local download
+        local fileready = false
+
+        net.Receive("WebStream::AdvDupe2::FileReadyDownload", function()
+            fileready = true
+        end)
+
         local function AdvDupe2_ReceiveFile()
+            fileready = false
             local autosave = net.ReadBool()
             local id = net.ReadString()
 
             if string.sub(id, 1, 4) == "WS::" then
-                WebStream.ReadStream(id, function(data)
+                download = WebStream.ReadStream(id, function(data)
                     parseData(data, autosave)
+
+                    download = nil
+                end)
+
+                timer.Create("AdvDupe2::ReceiveProgress", 0.25, 0, function()
+                    if not download then
+                        timer.Remove("AdvDupe2::ReceiveProgress")
+
+                        return
+                    end
+
+                    if fileready then
+                        AdvDupe2.ProgressBar.Percent = 50 + download:GetProgress() * 50
+                    end
                 end)
             else
                 net.ReadStream(nil, function(data)
