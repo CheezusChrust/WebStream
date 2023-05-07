@@ -1,5 +1,23 @@
 hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
     if SERVER then
+        local function sendNormal(data, ply)
+            net.WriteString("")
+            net.WriteStream(data, function()
+                ply.AdvDupe2.Downloading = false
+            end)
+        end
+
+        local function sendWebstream(data, ply)
+            local randID = "WS::" .. math.random() .. "." .. SysTime()
+
+            net.WriteString(randID)
+            WebStream.WriteStream(randID, data, ply, function()
+                ply.AdvDupe2.Downloading = false
+            end, function()
+                ply.AdvDupe2.Downloading = false
+            end)
+        end
+
         function AdvDupe2.SendToClient(ply, data, autosave)
             if not IsValid(ply) then return end
 
@@ -9,20 +27,10 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
             net.Start("AdvDupe2_ReceiveFile")
             net.WriteBool(autosave > 0)
 
-            if WebStream and #data > 100000 and WebStream.Active:GetBool() then
-                local randID = "WS::" .. math.random() .. "." .. SysTime()
-
-                net.WriteString(randID)
-                WebStream.WriteStream(randID, data, ply, function()
-                    ply.AdvDupe2.Downloading = false
-                end, function()
-                    ply.AdvDupe2.Downloading = false
-                end)
+            if WebStream and #data > 100000 and GetConVar("webstream_active_sv"):GetBool() and ply:GetInfoNum("webstream_active_cl", 0) == 1 then
+                sendWebstream(data, ply)
             else
-                net.WriteString("")
-                net.WriteStream(data, function()
-                    ply.AdvDupe2.Downloading = false
-                end)
+                sendNormal(data, ply)
             end
 
             net.Send(ply)

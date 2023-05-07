@@ -2,6 +2,33 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
     if CLIENT then
         local uploading = nil
 
+        local function sendNormal(name, read)
+            net.WriteString(name)
+
+            uploading = net.WriteStream(read, function()
+                uploading = nil
+                AdvDupe2.File = nil
+                AdvDupe2.RemoveProgressBar()
+            end)
+        end
+
+        local function sendWebstream(name, read)
+            local randID = "WS::" .. math.random() .. "." .. SysTime()
+
+            net.WriteString(randID)
+            net.WriteString(name)
+
+            uploading = WebStream.WriteStream(randID, read, nil, function()
+                uploading = nil
+                AdvDupe2.File = nil
+                AdvDupe2.RemoveProgressBar()
+            end, function()
+                uploading = nil
+                AdvDupe2.File = nil
+                AdvDupe2.RemoveProgressBar()
+            end)
+        end
+
         function AdvDupe2.UploadFile(ReadPath, ReadArea)
             if uploading then
                 AdvDupe2.Notify("Already opening file, please wait.", NOTIFY_ERROR)
@@ -40,29 +67,10 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
             if success then
                 net.Start("AdvDupe2_ReceiveFile")
 
-                if WebStream and filesize > 100000 and WebStream.Active:GetBool() then
-                    local randID = "WS::" .. math.random() .. "." .. SysTime()
-
-                    net.WriteString(randID)
-                    net.WriteString(name)
-
-                    uploading = WebStream.WriteStream(randID, read, nil, function()
-                        uploading = nil
-                        AdvDupe2.File = nil
-                        AdvDupe2.RemoveProgressBar()
-                    end, function()
-                        uploading = nil
-                        AdvDupe2.File = nil
-                        AdvDupe2.RemoveProgressBar()
-                    end)
+                if WebStream and filesize > 100000 and GetConVar("webstream_active_sv"):GetBool() and GetConVar("webstream_active_cl"):GetBool() then
+                    sendWebstream(name, read)
                 else
-                    net.WriteString(name)
-
-                    uploading = net.WriteStream(read, function()
-                        uploading = nil
-                        AdvDupe2.File = nil
-                        AdvDupe2.RemoveProgressBar()
-                    end)
+                    sendNormal(name, read)
                 end
 
                 net.SendToServer()

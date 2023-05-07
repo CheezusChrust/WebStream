@@ -1,18 +1,26 @@
 hook.Add("InitPostEntity", "WebStream::InitP2M", function()
     if SERVER then
+        local function sendNormal(crc, data)
+            net.WriteString(crc)
+            prop2mesh.WriteStream(data)
+        end
+
+        local function sendWebstream(crc, data, pl)
+            local id = "WS::" .. crc .. "." .. SysTime()
+            net.WriteString(id)
+            net.WriteString(crc)
+            WebStream.WriteStream(id, data, pl)
+        end
+
         function prop2mesh.sendDownload(pl, ent, crc)
             local data = ent.prop2mesh_partlists[crc]
 
             net.Start("prop2mesh_download")
 
-            if WebStream and #data > 25000 and WebStream.Active:GetBool() then
-                local id = "WS::" .. crc .. "." .. SysTime()
-                net.WriteString(id)
-                net.WriteString(crc)
-                WebStream.WriteStream(id, data)
+            if WebStream and #data > 25000 and GetConVar("webstream_active_sv"):GetBool() and pl:GetInfoNum("webstream_active_cl", 0) == 1 then
+                sendWebstream(crc, data, pl)
             else
-                net.WriteString(crc)
-                prop2mesh.WriteStream(data)
+                sendNormal(crc, data)
             end
 
             net.Send(pl)
