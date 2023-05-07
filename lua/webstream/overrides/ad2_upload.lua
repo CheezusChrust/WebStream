@@ -43,7 +43,9 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 AdvDupe2.File = nil
                 AdvDupe2.RemoveProgressBar()
             end, function()
-                AdvDupe2.InitProgressBar("Receiving...")
+                uploading = nil
+                net.Start("WebStream::AD2::FileReadyUpload")
+                net.SendToServer()
             end)
 
             timer.Create("AdvDupe2::UploadProgress", 0.25, 0, function()
@@ -53,11 +55,11 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                     return
                 end
 
-                AdvDupe2.ProgressBar.Percent = uploading:GetProgress() * 100
+                AdvDupe2.ProgressBar.Percent = uploading:GetProgress() * 50
             end)
         end
 
-        net.Receive("WebStream::AD2::FileReceived", function()
+        net.Receive("WebStream::AD2::FileReceivedUpload", function()
             uploading = nil
             AdvDupe2.File = nil
             AdvDupe2.RemoveProgressBar()
@@ -115,7 +117,17 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
             end
         end
     else
-        util.AddNetworkString("WebStream::AD2::FileReceived")
+        util.AddNetworkString("WebStream::AD2::FileReadyUpload")
+
+        net.Receive("WebStream::AD2::FileReadyUpload", function(_, ply)
+            if not IsValid(ply) then return end
+
+            if not ply.AdvDupe2 then
+                ply.AdvDupe2 = {}
+            end
+
+            ply.AdvDupe2.ClientUploadFinished = true
+        end)
 
         local function parseUpload(ply, data)
             if data then
@@ -134,6 +146,8 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 ply.AdvDupe2 = {}
             end
 
+            ply.AdvDupe2.ClientUploadFinished = false
+
             local data1 = net.ReadString()
             local stream
 
@@ -145,10 +159,26 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
 
                     net.Start("WebStream::AD2::FileReceived")
                     net.Send(ply)
+
+                    stream = nil
                 end, function()
                     AdvDupe2.Notify(ply, "Duplicator Upload Failed!", NOTIFY_ERROR, 5)
 
                     ply.AdvDupe2.Uploading = false
+
+                    stream = nil
+                end)
+
+                timer.Create("AdvDupe2::ReceiveProgress", 0.25, 0, function()
+                    if not stream then
+                        timer.Remove("AdvDupe2::ReceiveProgress")
+
+                        return
+                    end
+
+                    if ply.AdvDupe2.ClientUploadFinished then
+                        AdvDupe2.UpdateProgressBar(ply, 50 + stream:GetProgress() * 50)
+                    end
                 end)
             else
                 ply.AdvDupe2.Name = string.match(data1, "([%w_ ]+)") or "Advanced Duplication"
