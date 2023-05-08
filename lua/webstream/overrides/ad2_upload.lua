@@ -56,12 +56,10 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 end
 
                 AdvDupe2.ProgressBar.Percent = uploading:GetProgress() * 50
-
-                print("pisser")
             end)
         end
 
-        net.Receive("WebStream::AD2::FileReceivedUpload", function()
+        net.Receive("WebStream::AD2::FileReadyUpload", function()
             uploading = nil
             AdvDupe2.File = nil
             AdvDupe2.RemoveProgressBar()
@@ -181,8 +179,6 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                     if ply.AdvDupe2.ClientUploadFinished then
                         AdvDupe2.UpdateProgressBar(ply, 50 + stream:GetProgress() * 50)
                     end
-
-                    print("pisser2")
                 end)
             else
                 ply.AdvDupe2.Name = string.match(data1, "([%w_ ]+)") or "Advanced Duplication"
