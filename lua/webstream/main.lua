@@ -35,7 +35,13 @@ end
 
 hook.Add("InitPostEntity", "WebStream::BeginStatusUpdates", function()
     timer.Create("WebStream::CheckStatus", 30, 0, function()
-        local active = SERVER and cvActive:GetBool() or GetConVar("webstream_active_cl"):GetBool()
+        local active
+
+        if SERVER then
+            active = cvActive:GetBool()
+        else
+            active = GetConVar("webstream_active_cl"):GetBool()
+        end
 
         if not active then return end
 
