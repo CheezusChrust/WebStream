@@ -19,9 +19,13 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
                 end
 
                 local progress = 0
-                local client = download.clients[next(download.clients)]
-                if client and client.progress then
-                    progress = client.progress / download.numchunks
+                local client = next(download.clients)
+                if client then
+                    client = download.clients[client]
+
+                    if client.progress then
+                        progress = client.progress / download.numchunks
+                    end
                 end
 
                 AdvDupe2.UpdateProgressBar(ply, progress * 100)
