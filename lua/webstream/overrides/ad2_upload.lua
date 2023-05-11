@@ -170,7 +170,7 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                 end)
 
                 timer.Create("AdvDupe2::ReceiveProgress", 0.25, 0, function()
-                    if not stream then
+                    if not stream or not IsValid(ply) or not ply.AdvDupe2 then
                         timer.Remove("AdvDupe2::ReceiveProgress")
 
                         return
