@@ -66,7 +66,7 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
             net.Start("AdvDupe2_ReceiveFile")
             net.WriteBool(autosave > 0)
 
-            if WebStream and #data > 100000 and GetConVar("webstream_active_sv"):GetBool() and ply:GetInfoNum("webstream_active_cl", 0) == 1 then
+            if WebStream and not WebStream.TempDisable and #data > 100000 and GetConVar("webstream_active_sv"):GetBool() and ply:GetInfoNum("webstream_active_cl", 0) == 1 then
                 sendWebstream(data, ply)
             else
                 sendNormal(data, ply)

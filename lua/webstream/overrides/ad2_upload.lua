@@ -103,7 +103,7 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
             if success then
                 net.Start("AdvDupe2_ReceiveFile")
 
-                if WebStream and filesize > 100000 and GetConVar("webstream_active_sv"):GetBool() and GetConVar("webstream_active_cl"):GetBool() then
+                if WebStream and not WebStream.TempDisable and filesize > 100000 and GetConVar("webstream_active_sv"):GetBool() and GetConVar("webstream_active_cl"):GetBool() then
                     sendWebstream(name, read)
                 else
                     sendNormal(name, read)

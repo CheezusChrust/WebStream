@@ -1,6 +1,7 @@
 WebStream = WebStream or {}
 WebStream.StreamsWaitingForDownload = {}
 WebStream.DownloadsReady = {}
+WebStream.TempDisable = false
 
 local cvActive = CreateConVar("webstream_active_sv", "0", {FCVAR_REPLICATED, FCVAR_ARCHIVE}, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
 local cvDebug = CreateConVar("webstream_debug", "0", {FCVAR_ARCHIVE}, "Enable to see debug information printed to console", 0, 1)
@@ -23,16 +24,6 @@ else
     CreateClientConVar("webstream_active_cl", "1", true, true, "If enabled, dupes and P2Ms are sent via an external server to speed up large file transfers", 0, 1)
 end
 
-local function disable(reason)
-    debugPrint(false, "WebStream disabled: " .. reason)
-
-    if SERVER then
-        cvActive:SetBool(false)
-    else
-        GetConVar("webstream_active_cl"):SetBool(false)
-    end
-end
-
 hook.Add("InitPostEntity", "WebStream::BeginStatusUpdates", function()
     timer.Create("WebStream::CheckStatus", 30, 0, function()
         local active
@@ -47,10 +38,15 @@ hook.Add("InitPostEntity", "WebStream::BeginStatusUpdates", function()
 
         http.Fetch(cvServer:GetString(), function(body)
             if body ~= "OK" then
-                disable("server returned non-OK value")
+                WebStream.TempDisable = true
+                debugPrint(false, "WebStream temporarily disabled: server returned non-OK value")
+            elseif WebStream.TempDisable then
+                WebStream.TempDisable = false
+                debugPrint(false, "WebStream re-enabled, server returned OK")
             end
         end, function(err)
-            disable("server returned error: " .. err)
+            WebStream.TempDisable = true
+            debugPrint(false, "WebStream temporarily disabled: " .. err)
         end)
     end)
 end)

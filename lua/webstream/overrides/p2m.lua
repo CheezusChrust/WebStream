@@ -17,7 +17,7 @@ hook.Add("InitPostEntity", "WebStream::InitP2M", function()
 
             net.Start("prop2mesh_download")
 
-            if WebStream and #data > 25000 and GetConVar("webstream_active_sv"):GetBool() and pl:GetInfoNum("webstream_active_cl", 0) == 1 then
+            if WebStream and not WebStream.TempDisable and #data > 25000 and GetConVar("webstream_active_sv"):GetBool() and pl:GetInfoNum("webstream_active_cl", 0) == 1 then
                 sendWebstream(crc, data, pl)
             else
                 sendNormal(crc, data)
