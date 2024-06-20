@@ -24,7 +24,7 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Upload", function()
                     client = uploading.clients[client]
 
                     if client.progress then
-                        progress = client.progress / uploading.numchunks
+                        progress = client.progress / #uploading.chunks
                     end
                 end
 
