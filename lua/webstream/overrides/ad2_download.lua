@@ -24,7 +24,7 @@ hook.Add("InitPostEntity", "WebStream::InitAd2Download", function()
                     client = download.clients[client]
 
                     if client.progress then
-                        progress = client.progress / download.numchunks
+                        progress = client.progress / #download.chunks
                     end
                 end
 
